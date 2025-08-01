@@ -12,7 +12,7 @@
 
 using namespace facebook::react;
 
-@interface RNCPagerViewComponentView () <RCTRNCViewPagerViewProtocol, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIScrollViewDelegate>
+@interface RNCPagerViewComponentView () <RCTRNCViewPagerViewProtocol, UIPageViewControllerDataSource, UIPageViewControllerDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate>
 
 @property(nonatomic, strong) UIPageViewController *nativePageViewController;
 @property(nonatomic, strong) NSMutableArray<UIViewController *> *nativeChildrenViewControllers;
@@ -88,6 +88,28 @@ using namespace facebook::react;
     }
 }
 
+- (void)didMoveToWindow {
+    UIPanGestureRecognizer* gesture = [UIPanGestureRecognizer new];
+    gesture.delegate = self;
+    [self addGestureRecognizer: gesture];
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    if (otherGestureRecognizer == self->scrollView.panGestureRecognizer) {
+        UIPanGestureRecognizer* p = (UIPanGestureRecognizer*) gestureRecognizer;
+        CGPoint velocity = [p velocityInView:self];
+        if (self.currentIndex == 0 && velocity.x > 0) {
+          self->scrollView.panGestureRecognizer.enabled = false;
+            return NO;
+        } else {
+          self->scrollView.panGestureRecognizer.enabled = self->scrollView.scrollEnabled;
+        }
+    } else {
+      self->scrollView.panGestureRecognizer.enabled = self->scrollView.scrollEnabled;
+    }
+
+    return YES;
+}
 
 #pragma mark - React API
 
